@@ -1,16 +1,8 @@
 {
-  "installCommand": "npm install",
   "buildCommand": "pip install -r requirements.txt && python scripts/train_model.py && next build",
   "functions": {
-    "api/index.py": {
-      "runtime": "python3.9",
+    "api/predict.py": {
       "includeFiles": "api/model.joblib api/scaler.joblib"
     }
-  },
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "api/index.py"
-    }
-  ]
+  }
 }
