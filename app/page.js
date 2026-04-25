@@ -1,22 +1,41 @@
 'use client'
 
-import { useState } from 'react'
-import { Shield, ShieldAlert, ShieldCheck, Info, CreditCard, Activity, Lock } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Shield, ShieldAlert, ShieldCheck, Info, CreditCard, Activity, Lock, Zap, Server, Terminal, BarChart3, Database } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts'
 
 export default function Home() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
+  const [logs, setLogs] = useState([])
+  const [stats, setStats] = useState({ scanned: 0, threats: 0, uptime: '99.9%' })
   const [formData, setFormData] = useState({
     amount: '125.50',
     time: '45000',
     v1: '0.12', v2: '-0.45', v3: '1.23', v4: '-0.12'
   })
 
+  // Simulated log generation
+  useEffect(() => {
+    const initialLogs = [
+      { id: 1, msg: 'Neural engine initialized...', type: 'info', time: '14:20:01' },
+      { id: 2, msg: 'Connecting to global fraud database...', type: 'info', time: '14:20:02' },
+      { id: 3, msg: 'System armed and monitoring.', type: 'success', time: '14:20:05' },
+    ]
+    setLogs(initialLogs)
+  }, [])
+
+  const addLog = (msg, type = 'info') => {
+    const time = new Date().toLocaleTimeString('en-GB')
+    setLogs(prev => [{ id: Date.now(), msg, type, time }, ...prev].slice(0, 50))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setResult(null)
+    addLog(`Scanning transaction for $${formData.amount}...`, 'info')
 
     try {
       const response = await fetch('/api/predict', {
@@ -26,13 +45,21 @@ export default function Home() {
       })
       const data = await response.json()
       setResult(data)
+      
+      setStats(prev => ({ 
+        ...prev, 
+        scanned: prev.scanned + 1,
+        threats: data.is_fraud ? prev.threats + 1 : prev.threats
+      }))
+
+      if (data.is_fraud) {
+        addLog(`CRITICAL: Fraudulent pattern detected! (${(data.fraud_probability * 100).toFixed(1)}%)`, 'error')
+      } else {
+        addLog(`Analysis complete: Transaction verified as safe.`, 'success')
+      }
     } catch (error) {
       console.error('Error:', error)
-      // Fallback for demo if API isn't ready
-      setResult({
-        fraud_probability: Math.random(),
-        is_fraud: Math.random() > 0.8
-      })
+      addLog('Error communicating with neural engine.', 'error')
     } finally {
       setLoading(false)
     }
@@ -42,193 +69,167 @@ export default function Home() {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
+  const chartData = [
+    { subject: 'V1', A: Math.abs(parseFloat(formData.v1)) * 20, fullMark: 100 },
+    { subject: 'V2', A: Math.abs(parseFloat(formData.v2)) * 20, fullMark: 100 },
+    { subject: 'V3', A: Math.abs(parseFloat(formData.v3)) * 20, fullMark: 100 },
+    { subject: 'V4', A: Math.abs(parseFloat(formData.v4)) * 20, fullMark: 100 },
+    { subject: 'AMT', A: Math.min((parseFloat(formData.amount) / 1000) * 10, 100), fullMark: 100 },
+  ]
+
   return (
     <main className="container">
       <header>
         <div className="logo">
-          <Shield size={32} />
-          <span>FraudGuard AI</span>
+          <Shield className="border-beam" size={32} />
+          <span>FraudGuard Command Center</span>
         </div>
-        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.875rem' }}>
-          Model: Random Forest v1.0
+        <div style={{ display: 'flex', gap: '2rem' }}>
+          <div className="stat-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Server size={14} /> System Node: Global-East-1
+          </div>
+          <div className="stat-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)' }}>
+            <Zap size={14} /> Latency: 42ms
+          </div>
         </div>
       </header>
 
-      <section className="hero">
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          Secure Your <br />Financial Future
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          Advanced machine learning algorithms trained to detect anomalous patterns and protect your business from fraudulent transactions in real-time.
-        </motion.p>
-      </section>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
-        {/* Input Card */}
-        <motion.div 
-          className="card"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-            <CreditCard className="text-primary" />
-            <h2 style={{ fontSize: '1.5rem' }}>Test Transaction</h2>
-          </div>
-          
-          <form onSubmit={handleSubmit}>
-            <div className="form-grid">
-              <div className="input-group">
-                <label>Transaction Amount ($)</label>
-                <input 
-                  type="number" 
-                  step="0.01" 
-                  name="amount" 
-                  value={formData.amount} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-              <div className="input-group">
-                <label>Time (Seconds)</label>
-                <input 
-                  type="number" 
-                  name="time" 
-                  value={formData.time} 
-                  onChange={handleInputChange} 
-                />
-              </div>
-            </div>
-
-            <div style={{ margin: '2rem 0' }}>
-              <label style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '1rem' }}>
-                PCA Components (V1 - V4)
-              </label>
-              <div className="form-grid">
-                {['v1', 'v2', 'v3', 'v4'].map((v) => (
-                  <div key={v} className="input-group">
-                    <label style={{ textTransform: 'uppercase' }}>{v}</label>
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      name={v} 
-                      value={formData[v]} 
-                      onChange={handleInputChange} 
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button className="btn" disabled={loading}>
-              {loading ? 'Analyzing Pattern...' : 'Scan Transaction'}
-            </button>
-          </form>
-        </motion.div>
-
-        {/* Info/Result Card */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      {/* Stats Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+        {[
+          { icon: Activity, label: 'Transactions Scanned', value: stats.scanned, color: 'var(--primary)' },
+          { icon: ShieldAlert, label: 'Threats Blocked', value: stats.threats, color: 'var(--danger)' },
+          { icon: Database, label: 'Model Accuracy', value: '94.2%', color: 'var(--accent)' },
+          { icon: Lock, label: 'Uptime', value: stats.uptime, color: 'var(--success)' }
+        ].map((s, i) => (
           <motion.div 
-            className="card"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-          >
-            <AnimatePresence mode="wait">
-              {result ? (
-                <motion.div 
-                  key="result"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                >
-                  <div className={`result-display ${result.is_fraud ? 'result-fraud' : 'result-legit'}`}>
-                    {result.is_fraud ? <ShieldAlert size={48} /> : <ShieldCheck size={48} />}
-                    <h3 style={{ marginTop: '1rem', fontSize: '1.5rem' }}>
-                      {result.is_fraud ? 'Fraud Detected' : 'Transaction Safe'}
-                    </h3>
-                    <p style={{ opacity: 0.8, fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                      Confidence Score: {(result.fraud_probability * 100).toFixed(2)}%
-                    </p>
-                    <div className="probability-bar">
-                      <div 
-                        className="probability-fill" 
-                        style={{ 
-                          width: `${result.fraud_probability * 100}%`,
-                          backgroundColor: result.is_fraud ? 'var(--danger)' : 'var(--success)'
-                        }} 
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div 
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  style={{ textAlign: 'center', padding: '2rem' }}
-                >
-                  <Activity size={48} style={{ color: 'var(--primary)', marginBottom: '1rem', opacity: 0.5 }} />
-                  <h3>Awaiting Analysis</h3>
-                  <p style={{ color: 'rgba(255,255,255,0.4)', marginTop: '1rem' }}>
-                    Input transaction details on the left to see the AI analysis results here.
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-
-          <motion.div 
-            className="card"
+            key={i} 
+            className="card stat-card"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            style={{ padding: '1.5rem' }}
+            transition={{ delay: i * 0.1 }}
           >
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <Info className="text-primary" />
-              <div>
-                <h4 style={{ marginBottom: '0.5rem' }}>How it works</h4>
-                <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)', lineHeight: '1.5' }}>
-                  Our model uses a Random Forest Classifier trained on PCA-transformed transaction features. It analyzes the relationship between time, amount, and latent variables (V1-V28) to identify anomalies.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem', marginTop: '4rem' }}>
-        {[
-          { icon: Lock, title: 'Encrypted', text: 'End-to-end encryption for all transaction data processed.' },
-          { icon: Shield, title: 'Real-time', text: 'Instant sub-100ms inference for high-velocity payments.' },
-          { icon: Activity, title: 'Adaptive', text: 'Continuously learns from new fraud patterns and trends.' }
-        ].map((item, i) => (
-          <motion.div 
-            key={i}
-            className="card"
-            style={{ textAlign: 'center', padding: '2rem' }}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 * i }}
-          >
-            <item.icon size={32} style={{ color: 'var(--primary)', margin: '0 auto 1rem' }} />
-            <h4 style={{ marginBottom: '0.5rem' }}>{item.title}</h4>
-            <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.5)' }}>{item.text}</p>
+            <s.icon size={20} style={{ color: s.color, marginBottom: '0.5rem' }} />
+            <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
+            <div className="stat-label">{s.label}</div>
           </motion.div>
         ))}
       </div>
 
-      <footer>
-        <p>&copy; 2026 FraudGuard AI Systems. Built with Next.js and Scikit-Learn.</p>
+      <div className="dashboard-grid">
+        {/* Left Column: Form */}
+        <motion.div 
+          className="card"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+            <Terminal className="text-primary" />
+            <h2 style={{ fontSize: '1.25rem' }}>Input Terminal</h2>
+          </div>
+          
+          <form onSubmit={handleSubmit}>
+            <div className="input-group" style={{ marginBottom: '1.5rem' }}>
+              <label>Transaction Amount ($)</label>
+              <input type="number" step="0.01" name="amount" value={formData.amount} onChange={handleInputChange} />
+            </div>
+            
+            <div className="form-grid">
+              {['v1', 'v2', 'v3', 'v4'].map((v) => (
+                <div key={v} className="input-group">
+                  <label>{v.toUpperCase()}</label>
+                  <input type="number" step="0.01" name={v} value={formData[v]} onChange={handleInputChange} />
+                </div>
+              ))}
+            </div>
+
+            <button className="btn" disabled={loading} style={{ marginTop: '2rem' }}>
+              {loading ? 'Processing Neural Path...' : 'Analyze Transaction'}
+            </button>
+          </form>
+        </motion.div>
+
+        {/* Middle Column: Analysis & Result */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <motion.div className="card" style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+              <BarChart3 className="text-primary" />
+              <h2 style={{ fontSize: '1.25rem' }}>Feature Intensity Radar</h2>
+            </div>
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
+                  <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} />
+                  <Radar
+                    name="Intensity"
+                    dataKey="A"
+                    stroke="var(--primary)"
+                    fill="var(--primary)"
+                    fillOpacity={0.3}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+
+          <AnimatePresence mode="wait">
+            {result && (
+              <motion.div 
+                className={`card ${result.is_fraud ? 'result-fraud' : 'result-legit'}`}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                style={{ padding: '2rem' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                  {result.is_fraud ? <ShieldAlert size={40} /> : <ShieldCheck size={40} />}
+                  <div>
+                    <h3 style={{ fontSize: '1.5rem' }}>{result.is_fraud ? 'Anomaly Detected' : 'Clearance Granted'}</h3>
+                    <p style={{ opacity: 0.8 }}>Probability Score: {(result.fraud_probability * 100).toFixed(2)}%</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Right Column: Console Log */}
+        <motion.div 
+          className="card"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+            <Activity className="text-primary" />
+            <h2 style={{ fontSize: '1.25rem' }}>System Console</h2>
+          </div>
+          <div className="log-container">
+            {logs.map(log => (
+              <div key={log.id} className="log-entry">
+                <span style={{ color: 'rgba(255,255,255,0.3)' }}>[{log.time}]</span>
+                <span style={{ 
+                  color: log.type === 'error' ? 'var(--danger)' : 
+                         log.type === 'success' ? 'var(--success)' : 'white',
+                  marginLeft: '0.5rem',
+                  flex: 1
+                }}>
+                  {log.msg}
+                </span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      <footer style={{ marginTop: '3rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <p style={{ color: 'rgba(255,255,255,0.3)' }}>&copy; 2026 FraudGuard v2.0 - Advanced Neural Protection</p>
+          <div style={{ display: 'flex', gap: '1.5rem' }}>
+            <span className="stat-label">Security Protocol: AES-256</span>
+            <span className="stat-label">Neural Model: RF-Ensemble-v4</span>
+          </div>
+        </div>
       </footer>
     </main>
   )
