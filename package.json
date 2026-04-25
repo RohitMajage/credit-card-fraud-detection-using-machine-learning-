@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:next": "next build",
     "start": "next start",
     "lint": "next lint",
     "train": "python scripts/train_model.py"

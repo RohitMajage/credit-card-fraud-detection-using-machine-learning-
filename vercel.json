@@ -1,23 +1,16 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    },
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python"
+  "installCommand": "npm install",
+  "buildCommand": "pip install -r requirements.txt && python scripts/train_model.py && next build",
+  "functions": {
+    "api/index.py": {
+      "runtime": "python3.9",
+      "includeFiles": "api/model.joblib api/scaler.joblib"
     }
-  ],
+  },
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "api/index.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
     }
   ]
 }
