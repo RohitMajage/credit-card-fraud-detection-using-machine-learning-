@@ -1,8 +1,3 @@
 {
-  "buildCommand": "pip install -r requirements.txt && python scripts/train_model.py && next build",
-  "functions": {
-    "api/predict.py": {
-      "includeFiles": "api/model.joblib api/scaler.joblib"
-    }
-  }
+  "buildCommand": "next build"
 }

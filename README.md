@@ -1,55 +1,32 @@
-# Credit Card Fraud Detection System 🛡️
+# FraudGuard AI 🛡️
 
-A real-time credit card fraud detection web application powered by Machine Learning.
+A high-performance credit card fraud detection system built with Next.js. This application uses an ensemble of decision trees implemented natively in JavaScript for lightning-fast real-time inference on the edge.
 
 ## 🚀 Live Demo
-[View on Vercel](your-vercel-url-here)
+[View on Vercel](https://credit-card-fraud-detection-using-machine-learning.vercel.app/)
 
-## 🧠 How it Works
-- **Model**: Random Forest Classifier trained on synthetic PCA-transformed transaction data
-- **Features**: Time, Amount, and V1-V28 (PCA components mimicking the Kaggle dataset)
-- **Accuracy**: Trained with 2% fraud rate for realistic class imbalance
+## 🧠 Intelligence Engine
+- **Algorithm**: Custom Decision Tree Ensemble (JS) trained on PCA-transformed transaction patterns.
+- **Inference**: Native Next.js API Routes (Serverless).
+- **Architecture**: Zero-dependency inference for maximum reliability and speed.
 
 ## 🛠️ Tech Stack
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 16, Framer Motion, Lucide Icons |
-| Backend | Python, Flask, Scikit-Learn |
-| Hosting | Vercel |
+- **Frontend**: Next.js 14, Framer Motion, Lucide Icons.
+- **Styling**: Premium Vanilla CSS (Glassmorphism).
+- **Backend**: Next.js API Routes.
 
 ## 📦 Local Setup
 
-### 1. Install Dependencies
-```bash
-npm install
-pip install -r requirements.txt
-```
+1. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
 
-### 2. Train the Model
-```bash
-npm run train
-```
-This generates `api/model.joblib` and `api/scaler.joblib`.
+2. **Run Locally**:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 3. Run Locally
-```bash
-npm run dev
-```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## 📁 Project Structure
-```
-├── app/
-│   ├── globals.css     # Dark mode + Glassmorphism styles
-│   ├── layout.js       # Root layout
-│   └── page.js         # Main dashboard
-├── api/
-│   └── index.py        # Python serverless function
-├── scripts/
-│   └── train_model.py  # Model training script
-├── requirements.txt
-└── package.json
-```
-
-## 📊 Dataset
-Based on the structure of the [Kaggle Credit Card Fraud Detection Dataset](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud) using synthetic data for privacy compliance.
+## 📊 Methodology
+The model detects anomalies by analyzing the relationships between transaction amount, time, and latent variables (V1-V4). It identifies specific patterns typical of fraudulent transactions, such as significant negative shifts in V1 and V3 components paired with abnormal transaction amounts.
